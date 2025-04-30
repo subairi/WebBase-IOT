@@ -11,9 +11,21 @@
 #define DHTTYPE    DHT12 
 #define DHTPIN 4
 DHT dht(DHTPIN, DHTTYPE);
+String sliderValue = "0";
+
+// setting PWM properties
+const int led_pwm =2;
+const int freq = 5000;
+const int ledChannel = 0;
+const int resolution = 8;
+
+const char* PARAM_INPUT = "value";
+
 // Replace with your network credentials
 const char* ssid = "Elektro";
 const char* password = "tanyamashari";
+
+
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 String readDHT11Temperature() {
@@ -46,6 +58,10 @@ void setup(){
   Serial.begin(9600);
   dht.begin();
   
+  digitalWrite(led_pwm,OUTPUT);
+  
+  analogWrite(led_pwm, sliderValue.toInt());
+ 
   // Initialize SPIFFS
   if(!SPIFFS.begin()){
     Serial.println("An Error has occurred while mounting SPIFFS");
@@ -69,6 +85,22 @@ void setup(){
   server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", readDHT11Humidity().c_str());
   });
+
+  server.on("/slider", HTTP_GET, [] (AsyncWebServerRequest *request) {
+    String inputMessage;
+    // GET input1 value on <ESP_IP>/slider?value=<inputMessage>
+    if (request->hasParam(PARAM_INPUT)) {
+      inputMessage = request->getParam(PARAM_INPUT)->value();
+      sliderValue = inputMessage;
+      analogWrite(led_pwm, sliderValue.toInt());
+    }
+    else {
+      inputMessage = "No message sent";
+    }
+    Serial.println(inputMessage);
+    request->send(200, "text/plain", "OK");
+  });
+
 // Start server
   server.begin();
 }
