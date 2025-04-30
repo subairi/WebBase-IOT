@@ -6,12 +6,21 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 <style>
 body { min-width: 310px; max-width: 800px; height: 400px; margin: 0 auto; }
 h2 { font-family: Arial; font-size: 2.5rem; text-align: center;}
+.slider { -webkit-appearance: none; margin: 14px; width: 360px; height: 25px; background: #FFD65C;
+      outline: none; -webkit-transition: .2s; transition: opacity .2s;}
+    .slider::-webkit-slider-thumb {-webkit-appearance: none; appearance: none; width: 35px; height: 35px; background: #003249; cursor: pointer;}
+    .slider::-moz-range-thumb { width: 35px; height: 35px; background: #003249; cursor: pointer; } 
 </style>
 </head>
 <body>
 <h2>ESP Weather Station</h2>
 <div id="chart-temperature" class="container"></div>
 <div id="chart-humidity" class="container"></div>
+
+
+<p> <span>PWM VALUE:</span> <span  id="textSliderValue">%SLIDERVALUE%</span></p>
+<p><input type="range" onchange="updateSliderPWM(this)" id="pwmSlider" min="0" max="255" value="%SLIDERVALUE%" step="1" class="slider"></p>
+  
 </body>
 <script>
 var chartT = new Highcharts.Chart({
@@ -25,7 +34,9 @@ xAxis: { type: 'datetime',
 dateTimeLabelFormats: { second: '%H:%M:%S' }},
 yAxis: { title: { text: 'Temperature (Celsius)' }},
 credits: { enabled: false }});
-setInterval(function ( ) {
+
+setInterval(function ( ) 
+{
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function() {
 if (this.readyState == 4 && this.status == 200) {
@@ -39,6 +50,7 @@ chartT.series[0].addPoint([x, y], true, false, true);
 xhttp.open("GET", "/temperature", true);
 xhttp.send();
 }, 30000 ) ;
+
 var chartH = new Highcharts.Chart({
 chart:{ renderTo:'chart-humidity' },
 title: { text: 'DHT Humidity' },
@@ -49,6 +61,7 @@ xAxis: { type: 'datetime',
 dateTimeLabelFormats: { second: '%H:%M:%S' }},
 yAxis: { title: { text: 'Humidity (%)' }},
 credits: { enabled: false }});
+
 setInterval(function ( ) {
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function() {
@@ -64,5 +77,15 @@ chartH.series[0].addPoint([x, y], true, false, true);
 xhttp.open("GET", "/humidity", true);
 xhttp.send();
 }, 30000 ) ;
+
+function updateSliderPWM(element) {
+  var sliderValue = document.getElementById("pwmSlider").value;
+  document.getElementById("textSliderValue").innerHTML = sliderValue;
+  console.log(sliderValue);
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/slider?value="+sliderValue, true);
+  xhr.send();
+}
+
 </script>
 </html>
